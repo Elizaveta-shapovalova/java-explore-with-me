@@ -6,4 +6,5 @@ import ru.practicum.ewm_stats.model.App;
 
 @Repository
 public interface AppRepository extends JpaRepository<App, Long> {
+    App findByName(String appName);
 }

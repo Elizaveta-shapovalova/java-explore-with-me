@@ -13,6 +13,7 @@ import ru.practicum.ewm_stats.repository.HitRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Transactional(readOnly = true)
 @Service
@@ -25,7 +26,7 @@ public class HitServiceImpl implements HitService {
     @Transactional
     @Override
     public void create(Hit hit, App app) {
-        hit.setApp(appRepository.save(app));
+        hit.setApp(Objects.requireNonNullElseGet(appRepository.findByName(app.getName()), () -> appRepository.save(app)));
         hitRepository.save(hit);
     }
 
