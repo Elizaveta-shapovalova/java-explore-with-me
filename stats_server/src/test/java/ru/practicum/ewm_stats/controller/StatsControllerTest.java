@@ -45,7 +45,7 @@ class StatsControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        verify(hitService).create(any());
+        verify(hitService).create(any(), any());
     }
 
     @SneakyThrows

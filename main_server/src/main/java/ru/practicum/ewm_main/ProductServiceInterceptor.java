@@ -1,5 +1,6 @@
 package ru.practicum.ewm_main;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -15,12 +16,16 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class ProductServiceInterceptor implements HandlerInterceptor {
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    @Value("${stats-server-endpoint.url}")
+    private URL url;
+    @Value("${app-name}")
+    private String app;
 
     @Override
     public void afterCompletion(HttpServletRequest servletRequest, HttpServletResponse response, Object handler, Exception exception) throws Exception {
         if (servletRequest.getContextPath().equals("/events") && response.getStatus() == HttpServletResponse.SC_OK) {
 
-            URL url = new URL("https://localhost:9090/hit");
 
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("POST");
@@ -29,8 +34,8 @@ public class ProductServiceInterceptor implements HandlerInterceptor {
             JSONObject hit = new JSONObject();
             hit.put("ip", servletRequest.getRemoteAddr());
             hit.put("uri", servletRequest.getRequestURI());
-            hit.put("app", "main-server");
-            hit.put("app", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            hit.put("app", app);
+            hit.put("timestamp", LocalDateTime.now().format(DATE_TIME_FORMATTER));
 
             try (OutputStream os = con.getOutputStream()) {
                 byte[] input = hit.toString().getBytes(StandardCharsets.UTF_8);
