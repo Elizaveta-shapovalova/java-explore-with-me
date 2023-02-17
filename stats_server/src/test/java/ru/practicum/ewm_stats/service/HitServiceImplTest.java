@@ -44,6 +44,8 @@ class HitServiceImplTest {
 
     @Test
     void create_whenInvoked_thenVerifyMethod() {
+        when(appRepository.findByName(any())).thenReturn(null);
+        when(appRepository.save(any())).thenReturn(app);
         hitService.create(hit, app);
 
         verify(hitRepository).save(any());
