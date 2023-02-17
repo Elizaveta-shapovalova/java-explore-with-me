@@ -17,13 +17,13 @@ public class Hit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 64)
     private String app;
 
-    @Column(length = 256)
+    @Column(nullable = false, length = 64)
     private String uri;
 
-    @Column(length = 50)
+    @Column(nullable = false, length = 16)
     private String ip;
 
     @Column(nullable = false)
