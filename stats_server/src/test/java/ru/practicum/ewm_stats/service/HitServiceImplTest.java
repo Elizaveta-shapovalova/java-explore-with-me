@@ -19,8 +19,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -43,13 +42,24 @@ class HitServiceImplTest {
 
 
     @Test
-    void create_whenInvoked_thenVerifyMethod() {
+    void create_whenAppNotExists_thenVerifyMethod() {
         when(appRepository.findByName(any())).thenReturn(null);
         when(appRepository.save(any())).thenReturn(app);
+
         hitService.create(hit, app);
 
         verify(hitRepository).save(any());
         verify(appRepository).save(any());
+    }
+
+    @Test
+    void create_whenInvokedAppExists_thenVerifyMethod() {
+        when(appRepository.findByName(any())).thenReturn(app);
+
+        hitService.create(hit, app);
+
+        verify(hitRepository).save(any());
+        verify(appRepository, never()).save(any());
     }
 
     @Test
