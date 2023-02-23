@@ -42,7 +42,7 @@ class HitServiceImplTest {
 
 
     @Test
-    void create_whenAppNotExists_thenVerifyMethod() {
+    void create_whenInvokedAppNotExists_thenVerifyMethod() {
         when(appRepository.findByName(any())).thenReturn(null);
         when(appRepository.save(any())).thenReturn(app);
 

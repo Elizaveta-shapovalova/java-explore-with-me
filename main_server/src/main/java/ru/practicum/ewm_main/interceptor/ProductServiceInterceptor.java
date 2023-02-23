@@ -1,4 +1,4 @@
-package ru.practicum.ewm_main;
+package ru.practicum.ewm_main.interceptor;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.configurationprocessor.json.JSONObject;
