@@ -101,7 +101,9 @@ public class EventServiceImpl implements EventService {
                                    LocalDateTime rangeEnd, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size, SORT_BY_ASC);
         QEvent event = QEvent.event;
-        BooleanExpression query = null;
+
+
+        BooleanExpression query = event.isNotNull();
 
         if (users != null && !users.isEmpty()) {
             query.and(event.initiator.id.in(users));
@@ -118,12 +120,11 @@ public class EventServiceImpl implements EventService {
         if (rangeEnd != null) {
             query.and(event.eventDate.before(rangeStart));
         }
-
-        if (query != null) {
-            return eventRepository.findAll(query, pageable);
-        } else {
-            return eventRepository.findAll(pageable);
+        if(rangeStart == null && rangeEnd == null) {
+            query.and(event.eventDate.before(LocalDateTime.now()));
         }
+
+        return eventRepository.findAll(query, pageable);
     }
 
     @Transactional
