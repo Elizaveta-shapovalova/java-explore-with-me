@@ -120,7 +120,7 @@ public class EventServiceImpl implements EventService {
         if (rangeEnd != null) {
             query.and(event.eventDate.before(rangeStart));
         }
-        if(rangeStart == null && rangeEnd == null) {
+        if (rangeStart == null && rangeEnd == null) {
             query.and(event.eventDate.before(LocalDateTime.now()));
         }
 
