@@ -1,6 +1,5 @@
 package ru.practicum.ewm_main.event.service;
 
-import org.springframework.data.domain.Page;
 import ru.practicum.ewm_main.event.enums.AdminStateAction;
 import ru.practicum.ewm_main.event.enums.SortType;
 import ru.practicum.ewm_main.event.enums.State;
@@ -17,7 +16,7 @@ public interface EventService {
 
     Event getByIdPublic(Long eventId);
 
-    Page<Event> getAllAdmin(List<Long> users, List<State> states, List<Long> categories, LocalDateTime rangeStart,
+    List<Event> getAllAdmin(List<Long> users, List<State> states, List<Long> categories, LocalDateTime rangeStart,
                             LocalDateTime rangeEnd, Integer from, Integer size);
 
     Event updateAdmin(Long eventId, Long category, AdminStateAction stateAction, Event event);
@@ -29,6 +28,4 @@ public interface EventService {
     Event getByIdPrivate(Long userId, Long eventId);
 
     Event updatePrivate(Long userId, Long eventId, Long category, UserStateAction stateAction, Event event);
-
-    void addView(List<Event> events);
 }

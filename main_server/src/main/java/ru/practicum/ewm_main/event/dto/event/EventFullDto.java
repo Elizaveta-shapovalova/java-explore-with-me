@@ -1,11 +1,14 @@
 package ru.practicum.ewm_main.event.dto.event;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm_main.category.dto.CategoryDto;
 import ru.practicum.ewm_main.event.dto.location.LocationDto;
 import ru.practicum.ewm_main.event.enums.State;
 import ru.practicum.ewm_main.user.dto.UserShotDto;
+
+import java.time.LocalDateTime;
 
 @Builder
 @Data
@@ -16,15 +19,18 @@ public class EventFullDto {
     String annotation;
     CategoryDto category;
     Long confirmedRequests;
-    String createdOn;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime createdOn;
     String description;
-    String eventDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime eventDate;
     Long id;
     UserShotDto initiator;
     LocationDto location;
     Boolean paid;
     Long participantLimit;
-    String publishedOn;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime publishedOn;
     Boolean requestModeration;
     State state;
     String title;

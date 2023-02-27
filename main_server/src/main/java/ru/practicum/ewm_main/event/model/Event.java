@@ -57,9 +57,8 @@ public class Event {
     @Column(nullable = false)
     @Length(min = 3, max = 120)
     String title;
-    @Builder.Default
+    @Transient
     Long views = 0L;
-    @Column(name = "confirmed_requests")
-    @Builder.Default
-    Long confirmedRequests = 0L;
+    @Transient
+    Long confirmedRequests;
 }

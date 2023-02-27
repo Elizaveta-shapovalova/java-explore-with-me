@@ -14,6 +14,7 @@ import ru.practicum.ewm_main.event.model.Event;
 import ru.practicum.ewm_main.event.repository.EventRepository;
 import ru.practicum.ewm_main.exception.ObjectNotFoundException;
 
+import java.util.HashSet;
 import java.util.List;
 
 import static ru.practicum.ewm_main.constant.Constant.SORT_BY_ASC;
@@ -31,7 +32,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public Compilation create(Compilation compilation, List<Long> eventIds) {
         if (eventIds != null && !eventIds.isEmpty()) {
-            compilation.setEvents(getEventsAndCheck(eventIds));
+            compilation.setEvents(new HashSet<>(getEventsAndCheck(eventIds)));
         }
         return compilationRepository.save(compilation);
     }
@@ -47,7 +48,7 @@ public class CompilationServiceImpl implements CompilationService {
     public Compilation update(Long id, Compilation compilation, List<Long> eventIds) {
         Compilation compilationToUpdate = getById(id);
         if (eventIds != null && !eventIds.isEmpty()) {
-            compilationToUpdate.setEvents(getEventsAndCheck(eventIds));
+            compilationToUpdate.setEvents(new HashSet<>(getEventsAndCheck(eventIds)));
         }
         if (compilation.getTitle() != null && !compilation.getTitle().isBlank()) {
             compilationToUpdate.setTitle(compilation.getTitle());

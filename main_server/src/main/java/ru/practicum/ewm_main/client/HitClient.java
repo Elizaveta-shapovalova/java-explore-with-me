@@ -14,6 +14,9 @@ import static ru.practicum.ewm_main.constant.Constant.DATE_TIME_FORMATTER;
 
 @Service
 public class HitClient extends BaseClient {
+    @Value("${app-name}")
+    private String app;
+
     @Autowired
     public HitClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
@@ -25,12 +28,10 @@ public class HitClient extends BaseClient {
     }
 
     public void createHit(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        String ip = request.getRemoteAddr();
         post("/hit", EndpointHit.builder()
-                .ip(ip)
-                .uri(uri)
-                .app("main-server")
+                .ip(request.getRemoteAddr())
+                .uri(request.getRequestURI())
+                .app(app)
                 .timestamp(LocalDateTime.now().format(DATE_TIME_FORMATTER))
                 .build());
     }

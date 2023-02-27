@@ -43,9 +43,6 @@ public class PublicEventController {
         SortType sort = SortType.from(stringSort);
         List<Event> events = eventService.getAllPublic(text, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size);
-        if (!events.isEmpty()) {
-            eventService.addView(events);
-        }
         hitClient.createHit(httpServletRequest);
         return EventMapper.toListEventDto(events);
     }
@@ -53,7 +50,6 @@ public class PublicEventController {
     @GetMapping("/{eventId}")
     public EventFullDto getByIdPublic(@PathVariable Long eventId, HttpServletRequest httpServletRequest) {
         Event event = eventService.getByIdPublic(eventId);
-        eventService.addView(List.of(event));
         hitClient.createHit(httpServletRequest);
         return EventMapper.toEventFullDto(event);
     }

@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm_main.request.dto.RequestDto;
 import ru.practicum.ewm_main.request.mapper.RequestMapper;
@@ -14,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@Validated
 @RequestMapping(path = "/users/{userId}/requests")
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class PrivateRequestController {

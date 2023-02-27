@@ -48,8 +48,8 @@ public class RequestServiceImpl implements RequestService {
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new ValidationException("Event not published yet.");
         }
-        Long confirmedRequests = event.getConfirmedRequests();
-        if (event.getParticipantLimit() != 0 && event.getParticipantLimit().equals(confirmedRequests)) {
+        if (event.getParticipantLimit() != 0 && event.getParticipantLimit()
+                .equals(requestRepository.countRequestByEventIdAndStatusEquals(eventId, Status.CONFIRMED))) {
             throw new ValidationException("Event has reached participant limit");
         }
         Request request = Request.builder()
@@ -58,8 +58,6 @@ public class RequestServiceImpl implements RequestService {
                 .build();
         if (!event.getRequestModeration()) {
             request.setStatus(Status.CONFIRMED);
-            event.setConfirmedRequests(confirmedRequests + 1);
-            eventRepository.save(event);
         } else {
             request.setStatus(Status.PENDING);
         }
@@ -91,7 +89,7 @@ public class RequestServiceImpl implements RequestService {
     public List<Request> updateStatusPrivate(Long userId, Long eventId, List<Long> requestIds, Status status) {
         checkUser(userId);
         Event event = checkEvent(eventId);
-        Long confirmedRequests = event.getConfirmedRequests();
+        Long confirmedRequests = requestRepository.countRequestByEventIdAndStatusEquals(eventId, Status.CONFIRMED);
 
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ValidationException("Only initiator can update requests");
@@ -101,29 +99,32 @@ public class RequestServiceImpl implements RequestService {
         }
 
         List<Request> requestToSend = new ArrayList<>();
+        List<Request> requests = requestRepository.findAllByIdIn(requestIds);
 
-        for (Long requestId : requestIds) {
-            Request request = checkRequest(requestId);
-            if (!request.getEvent().getId().equals(event.getId())) {
-                throw new ValidationException(String.format("Event and request with id=%d event don't match", requestId));
+        if (requests.size() != requestIds.size()) {
+            throw new ObjectNotFoundException(String.format("Events with ids=%s was not found", requestIds));
+        }
+
+        for (Request request : requests) {
+            if (!request.getEvent().getId().equals(eventId)) {
+                throw new ValidationException(String.format("Event and request with id=%d event don't match", request.getId()));
             }
             if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
                 requestToSend.add(request);
             } else {
                 if (!request.getStatus().equals(Status.PENDING)) {
-                    throw new ValidationException(String.format("Request with id=%d not pending", requestId));
+                    throw new ValidationException(String.format("Request with id=%d not pending", request.getId()));
                 }
                 if (status.equals(Status.CONFIRMED) && event.getParticipantLimit() > confirmedRequests) {
                     request.setStatus(Status.CONFIRMED);
                     requestToSend.add(request);
-                    event.setConfirmedRequests(confirmedRequests + 1L);
-                    eventRepository.save(event);
                 } else {
                     requestToSend.add(request);
                     request.setStatus(Status.REJECTED);
                 }
             }
         }
+
         return requestToSend;
     }
 

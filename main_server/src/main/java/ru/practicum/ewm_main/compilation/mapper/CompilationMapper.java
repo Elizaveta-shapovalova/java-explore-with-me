@@ -9,6 +9,7 @@ import ru.practicum.ewm_main.compilation.model.Compilation;
 import ru.practicum.ewm_main.event.mapper.EventMapper;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -24,7 +25,7 @@ public class CompilationMapper {
         return CompilationDto.builder()
                 .id(compilation.getId())
                 .events(compilation.getEvents() != null && !compilation.getEvents().isEmpty() ?
-                        EventMapper.toListEventDto(compilation.getEvents()) : List.of())
+                        EventMapper.toSetEventDto(compilation.getEvents()) : Set.of())
                 .title(compilation.getTitle())
                 .pinned(compilation.getPinned())
                 .build();

@@ -11,7 +11,6 @@ import ru.practicum.ewm_main.event.dto.event.EventFullDto;
 import ru.practicum.ewm_main.event.dto.event.EventUpdatePrivateDto;
 import ru.practicum.ewm_main.event.dto.event.NewEventDto;
 import ru.practicum.ewm_main.event.mapper.EventMapper;
-import ru.practicum.ewm_main.event.model.Event;
 import ru.practicum.ewm_main.event.service.EventService;
 import ru.practicum.ewm_main.request.dto.RequestConfirmedDto;
 import ru.practicum.ewm_main.request.dto.RequestDto;
@@ -38,11 +37,7 @@ public class PrivateEventController {
     public List<EventDto> getAllPrivate(@PathVariable Long userId,
                                         @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
                                         @Positive @RequestParam(defaultValue = "10") Integer size) {
-        List<Event> events = eventService.getAllPrivate(userId, from, size);
-        if (!events.isEmpty()) {
-            eventService.addView(events);
-        }
-        return EventMapper.toListEventDto(events);
+        return EventMapper.toListEventDto(eventService.getAllPrivate(userId, from, size));
     }
 
     @PostMapping
@@ -54,9 +49,7 @@ public class PrivateEventController {
 
     @GetMapping("/{eventId}")
     public EventFullDto getByIdPrivate(@PathVariable Long userId, @PathVariable Long eventId) {
-        Event event = eventService.getByIdPrivate(userId, eventId);
-        eventService.addView(List.of(event));
-        return EventMapper.toEventFullDto(event);
+        return EventMapper.toEventFullDto(eventService.getByIdPrivate(userId, eventId));
     }
 
     @PatchMapping("/{eventId}")

@@ -11,6 +11,7 @@ import ru.practicum.ewm_main.event.dto.event.EventUpdateAdminDto;
 import ru.practicum.ewm_main.event.enums.State;
 import ru.practicum.ewm_main.event.mapper.EventMapper;
 import ru.practicum.ewm_main.event.service.EventService;
+import ru.practicum.ewm_main.validation.Update;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -33,12 +34,12 @@ public class AdminEventController {
                                           @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                           @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
                                           @Positive @RequestParam(defaultValue = "10") Integer size) {
-        return EventMapper.toListEventFullDtoFromPage(eventService.getAllAdmin(users, State.fromList(states), categories, rangeStart,
+        return EventMapper.toListEventFullDto(eventService.getAllAdmin(users, State.fromList(states), categories, rangeStart,
                 rangeEnd, from, size));
     }
 
     @PatchMapping("/{eventId}")
-    public EventFullDto updateAdmin(@PathVariable Long eventId, @RequestBody EventUpdateAdminDto eventUpdateAdminDto) {
+    public EventFullDto updateAdmin(@PathVariable Long eventId, @Validated({Update.class}) @RequestBody EventUpdateAdminDto eventUpdateAdminDto) {
         return EventMapper.toEventFullDto(eventService.updateAdmin(eventId, eventUpdateAdminDto.getCategory(),
                 eventUpdateAdminDto.getStateAction(), EventMapper.toEventFromUpdateAdmin(eventUpdateAdminDto)));
     }

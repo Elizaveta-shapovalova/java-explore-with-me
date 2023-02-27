@@ -4,7 +4,6 @@ import com.querydsl.core.BooleanBuilder;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,13 +21,20 @@ import ru.practicum.ewm_main.event.repository.EventRepository;
 import ru.practicum.ewm_main.event.repository.LocationRepository;
 import ru.practicum.ewm_main.exception.ObjectNotFoundException;
 import ru.practicum.ewm_main.exception.ValidationException;
+import ru.practicum.ewm_main.request.model.Request;
+import ru.practicum.ewm_main.request.model.Status;
+import ru.practicum.ewm_main.request.repository.RequestRepository;
 import ru.practicum.ewm_main.user.model.User;
 import ru.practicum.ewm_main.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 import static ru.practicum.ewm_main.constant.Constant.SORT_BY_ASC;
 
 
@@ -43,6 +49,7 @@ public class EventServiceImpl implements EventService {
     LocationRepository locationRepository;
     static Sort SORT_BY_VIEWS = Sort.by(Sort.Direction.DESC, "views");
     static Sort SORT_BY_EVENT_DATE = Sort.by(Sort.Direction.ASC, "eventDate");
+    private final RequestRepository requestRepository;
 
     @Override
     public List<Event> getAllPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
@@ -87,17 +94,21 @@ public class EventServiceImpl implements EventService {
             pageable = PageRequest.of(from / size, size, SORT_BY_ASC);
         }
 
-        return eventRepository.findAll(builder, pageable).stream().collect(Collectors.toList());
+        List<Event> events = eventRepository.findAll(builder, pageable).stream().collect(Collectors.toList());
+        loadConfirmedRequests(events);
+        return events;
     }
 
     @Override
     public Event getByIdPublic(Long eventId) {
-        return eventRepository.findByIdAndStateEquals(eventId, State.PUBLISHED)
+        Event event = eventRepository.findByIdAndStateEquals(eventId, State.PUBLISHED)
                 .orElseThrow(() -> new ObjectNotFoundException(String.format("Event with id=%d was not found", eventId)));
+        loadConfirmedRequests(List.of(event));
+        return event;
     }
 
     @Override
-    public Page<Event> getAllAdmin(List<Long> users, List<State> states, List<Long> categories, LocalDateTime rangeStart,
+    public List<Event> getAllAdmin(List<Long> users, List<State> states, List<Long> categories, LocalDateTime rangeStart,
                                    LocalDateTime rangeEnd, Integer from, Integer size) {
 
         Pageable pageable = PageRequest.of(from / size, size, SORT_BY_ASC);
@@ -122,8 +133,9 @@ public class EventServiceImpl implements EventService {
         if (categories != null && !categories.isEmpty()) {
             builder.and(event.category.id.in(categories));
         }
-
-        return eventRepository.findAll(builder, pageable);
+        List<Event> events = eventRepository.findAll(builder, pageable).stream().collect(Collectors.toList());
+        loadConfirmedRequests(events);
+        return events;
     }
 
     @Transactional
@@ -154,8 +166,10 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<Event> getAllPrivate(Long userId, Integer from, Integer size) {
         checkUser(userId);
-        return eventRepository.findAllByInitiatorId(userId, PageRequest.of(from / size, size, SORT_BY_ASC))
+        List<Event> events = eventRepository.findAllByInitiatorId(userId, PageRequest.of(from / size, size, SORT_BY_ASC))
                 .stream().collect(Collectors.toList());
+        loadConfirmedRequests(events);
+        return events;
     }
 
     @Transactional
@@ -173,8 +187,9 @@ public class EventServiceImpl implements EventService {
         checkUser(userId);
         Event event = checkEvent(eventId);
         if (!event.getInitiator().getId().equals(userId)) {
-            throw new ValidationException("Only initiator can get full information of event");
+            throw new ValidationException("Only initiator can get full information or update event");
         }
+        loadConfirmedRequests(List.of(event));
         return event;
     }
 
@@ -182,9 +197,6 @@ public class EventServiceImpl implements EventService {
     @Override
     public Event updatePrivate(Long userId, Long eventId, Long category, UserStateAction stateAction, Event event) {
         Event eventToUpdate = getByIdPrivate(userId, eventId);
-        if (!eventToUpdate.getInitiator().getId().equals(userId)) {
-            throw new ValidationException("Only initiator can update event");
-        }
         if (eventToUpdate.getState().equals(State.PUBLISHED)) {
             throw new ValidationException("Only pending or canceled events can be changed");
         }
@@ -196,15 +208,6 @@ public class EventServiceImpl implements EventService {
             updateFields(category, eventToUpdate, event);
         }
         return eventToUpdate;
-    }
-
-    @Transactional
-    @Override
-    public void addView(List<Event> events) {
-        events.forEach(event -> {
-            event.setViews(event.getViews() + 1);
-            eventRepository.save(event);
-        });
     }
 
     private void updateFields(Long categoryId, Event eventToUpdate, Event event) {
@@ -237,6 +240,14 @@ public class EventServiceImpl implements EventService {
             checkEventTime(event.getEventDate());
             eventToUpdate.setEventDate(event.getEventDate());
         }
+    }
+
+    private void loadConfirmedRequests(List<Event> events) {
+        Map<Event, Set<Request>> requests = requestRepository.findAllByEventInAndStatusEquals(events, Status.CONFIRMED)
+                .stream()
+                .collect(groupingBy(Request::getEvent, toSet()));
+
+        events.forEach(event -> event.setConfirmedRequests((long) requests.values().size()));
     }
 
     private Category checkCategory(Long categoryId) {
