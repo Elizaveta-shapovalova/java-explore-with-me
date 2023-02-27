@@ -1,6 +1,8 @@
 package ru.practicum.ewm_main.compilation.controller;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,7 @@ import ru.practicum.ewm_main.validation.Create;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/admin/compilations")
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class AdminCompilationController {
     CompilationService compilationService;
 

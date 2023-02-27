@@ -1,4 +1,4 @@
-package ru.practicum.ewm_main.event.dto;
+package ru.practicum.ewm_main.event.dto.event;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

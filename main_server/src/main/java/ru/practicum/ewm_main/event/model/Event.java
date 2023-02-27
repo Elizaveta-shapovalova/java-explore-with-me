@@ -2,6 +2,7 @@ package ru.practicum.ewm_main.event.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import ru.practicum.ewm_main.category.model.Category;
@@ -24,7 +25,8 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @Column(length = 1000, nullable = false)
+    @Column(nullable = false)
+    @Length(min = 20, max = 2000)
     String annotation;
     @ManyToOne
     @JoinColumn(name = "category_id", referencedColumnName = "id")
@@ -32,7 +34,7 @@ public class Event {
     @CreatedDate
     @Column(name = "created_on")
     LocalDateTime createdOn;
-    @Column(length = 1000)
+    @Length(min = 20, max = 7000)
     String description;
     @Column(name = "event_date")
     LocalDateTime eventDate;
@@ -52,7 +54,8 @@ public class Event {
     Boolean requestModeration;
     @Enumerated(EnumType.STRING)
     State state;
-    @Column(length = 512, nullable = false)
+    @Column(nullable = false)
+    @Length(min = 3, max = 120)
     String title;
     @Builder.Default
     Long views = 0L;

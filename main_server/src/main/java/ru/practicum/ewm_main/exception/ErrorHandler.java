@@ -1,15 +1,15 @@
 package ru.practicum.ewm_main.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
-import java.util.List;
 
 
 @RestControllerAdvice
@@ -22,6 +22,29 @@ public class ErrorHandler {
         return ApiError.builder()
                 .status(HttpStatus.BAD_REQUEST)
                 .reason("Incorrectly made request.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleConflictException(final DataIntegrityViolationException e) {
+        return ApiError.builder()
+                .status(HttpStatus.CONFLICT)
+                .reason("Integrity constraint has been violated.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleConstraintViolationException(final ConstraintViolationException e) {
+        log.error("{}{}", e.getLocalizedMessage(), e.getMessage());
+        return ApiError.builder()
+                .status(HttpStatus.CONFLICT)
+                .reason("Integrity constraint has been violated.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -46,18 +69,6 @@ public class ErrorHandler {
         return ApiError.builder()
                 .status(HttpStatus.FORBIDDEN)
                 .reason("For the requested operation the conditions are not met.")
-                .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleConstraintViolationException(final ConstraintViolationException e) {
-        log.error("{}{}", e.getLocalizedMessage(), e.getMessage());
-        return ApiError.builder()
-                .status(HttpStatus.CONFLICT)
-                .reason("Integrity constraint has been violated.")
                 .message(e.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -104,7 +115,6 @@ public class ErrorHandler {
     public ApiError handleThrowable(final Throwable e) {
         log.error("{}{}", e.getLocalizedMessage(), e.getMessage());
         return ApiError.builder()
-                .errors(List.of(e.getStackTrace()))
                 .status(HttpStatus.BAD_REQUEST)
                 .reason("Throwable exception.")
                 .message("Unexpected error.")

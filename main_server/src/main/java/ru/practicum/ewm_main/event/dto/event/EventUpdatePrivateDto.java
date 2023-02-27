@@ -1,22 +1,24 @@
-package ru.practicum.ewm_main.event.dto;
+package ru.practicum.ewm_main.event.dto.event;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.ewm_main.event.enums.AdminStateAction;
+import ru.practicum.ewm_main.event.dto.location.LocationDto;
+import ru.practicum.ewm_main.event.enums.UserStateAction;
 
 @Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EventUpdateAdminDto {
+public class EventUpdatePrivateDto {
     String annotation;
     Long category;
     String description;
-    LocationDto location;
+    String eventDate;
+    LocationDto locationDto;
     Boolean paid;
     Long participantLimit;
     Boolean requestModeration;
-    AdminStateAction stateAction;
+    UserStateAction stateAction;
     String title;
 }

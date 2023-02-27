@@ -1,12 +1,11 @@
-package ru.practicum.ewm_main.event.dto;
+package ru.practicum.ewm_main.event.dto.event;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.ewm_main.category.dto.CategoryDto;
+import ru.practicum.ewm_main.event.dto.location.LocationDto;
 import ru.practicum.ewm_main.event.enums.State;
 import ru.practicum.ewm_main.user.dto.UserShotDto;
-
-import java.time.LocalDateTime;
 
 @Builder
 @Data
@@ -19,7 +18,7 @@ public class EventFullDto {
     Long confirmedRequests;
     String createdOn;
     String description;
-    LocalDateTime eventDate;
+    String eventDate;
     Long id;
     UserShotDto initiator;
     LocationDto location;

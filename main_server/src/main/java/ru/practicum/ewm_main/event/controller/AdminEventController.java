@@ -6,8 +6,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm_main.event.dto.EventFullDto;
-import ru.practicum.ewm_main.event.dto.EventUpdateAdminDto;
+import ru.practicum.ewm_main.event.dto.event.EventFullDto;
+import ru.practicum.ewm_main.event.dto.event.EventUpdateAdminDto;
 import ru.practicum.ewm_main.event.enums.State;
 import ru.practicum.ewm_main.event.mapper.EventMapper;
 import ru.practicum.ewm_main.event.service.EventService;
@@ -41,6 +41,5 @@ public class AdminEventController {
     public EventFullDto updateAdmin(@PathVariable Long eventId, @RequestBody EventUpdateAdminDto eventUpdateAdminDto) {
         return EventMapper.toEventFullDto(eventService.updateAdmin(eventId, eventUpdateAdminDto.getCategory(),
                 eventUpdateAdminDto.getStateAction(), EventMapper.toEventFromUpdateAdmin(eventUpdateAdminDto)));
-
     }
 }

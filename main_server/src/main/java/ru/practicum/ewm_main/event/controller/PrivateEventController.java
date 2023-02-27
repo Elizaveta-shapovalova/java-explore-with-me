@@ -6,10 +6,10 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm_main.event.dto.EventDto;
-import ru.practicum.ewm_main.event.dto.EventFullDto;
-import ru.practicum.ewm_main.event.dto.EventShortDto;
-import ru.practicum.ewm_main.event.dto.EventUpdatePrivateDto;
+import ru.practicum.ewm_main.event.dto.event.EventDto;
+import ru.practicum.ewm_main.event.dto.event.EventFullDto;
+import ru.practicum.ewm_main.event.dto.event.EventUpdatePrivateDto;
+import ru.practicum.ewm_main.event.dto.event.NewEventDto;
 import ru.practicum.ewm_main.event.mapper.EventMapper;
 import ru.practicum.ewm_main.event.model.Event;
 import ru.practicum.ewm_main.event.service.EventService;
@@ -47,9 +47,9 @@ public class PrivateEventController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public EventFullDto create(@PathVariable Long userId, @Validated({Create.class}) @RequestBody EventShortDto eventShortDto) {
-        return EventMapper.toEventFullDto(eventService.create(userId, eventShortDto.getCategory(),
-                EventMapper.toEventFromShort(eventShortDto)));
+    public EventFullDto create(@PathVariable Long userId, @Validated({Create.class}) @RequestBody NewEventDto newEventDto) {
+        return EventMapper.toEventFullDto(eventService.create(userId, newEventDto.getCategory(),
+                EventMapper.toEventFromNew(newEventDto)));
     }
 
     @GetMapping("/{eventId}")
@@ -62,7 +62,6 @@ public class PrivateEventController {
     @PatchMapping("/{eventId}")
     public EventFullDto updatePrivate(@PathVariable Long userId, @PathVariable Long eventId,
                                       @Validated({Update.class}) @RequestBody EventUpdatePrivateDto eventUpdatePrivateDto) {
-        System.out.println("PrivateEventController.updatePrivate");
         return EventMapper.toEventFullDto(eventService.updatePrivate(userId, eventId, eventUpdatePrivateDto.getCategory(),
                 eventUpdatePrivateDto.getStateAction(), EventMapper.toEventFromUpdatePrivate(eventUpdatePrivateDto)));
     }

@@ -32,7 +32,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     @Override
     public void delete(Long id) {
-        if (eventRepository.findAllByCategoryId(id) != null || !eventRepository.findAllByCategoryId(id).isEmpty()) {
+        if (eventRepository.findAllByCategoryId(id) != null && !eventRepository.findAllByCategoryId(id).isEmpty()) {
             throw new ValidationException("The category is not empty");
         }
         categoryRepository.delete(getById(id));

@@ -4,7 +4,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 import ru.practicum.ewm_main.category.mapper.CategoryMapper;
-import ru.practicum.ewm_main.event.dto.*;
+import ru.practicum.ewm_main.event.dto.event.*;
+import ru.practicum.ewm_main.event.enums.State;
 import ru.practicum.ewm_main.event.model.Event;
 import ru.practicum.ewm_main.mapper.TimeMapper;
 import ru.practicum.ewm_main.user.mapper.UserMapper;
@@ -42,13 +43,13 @@ public class EventMapper {
                 .confirmedRequests(event.getConfirmedRequests())
                 .createdOn(event.getCreatedOn().format(DATE_TIME_FORMATTER))
                 .description(event.getDescription())
-                .eventDate(event.getEventDate())
+                .eventDate(event.getEventDate().format(DATE_TIME_FORMATTER))
                 .id(event.getId())
                 .initiator(UserMapper.toUserShotDto(event.getInitiator()))
                 .location(LocationMapper.toLocationDto(event.getLocation()))
                 .paid(event.getPaid())
                 .participantLimit(event.getParticipantLimit())
-                .publishedOn(event.getPublishedOn().format(DATE_TIME_FORMATTER))
+                .publishedOn(event.getPublishedOn() != null ? event.getPublishedOn().format(DATE_TIME_FORMATTER) : null)
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState())
                 .title(event.getTitle())
@@ -64,7 +65,9 @@ public class EventMapper {
         return Event.builder()
                 .annotation(eventUpdateAdminDto.getAnnotation())
                 .description(eventUpdateAdminDto.getDescription())
-                .location(LocationMapper.toLocation(eventUpdateAdminDto.getLocation()))
+                .eventDate(eventUpdateAdminDto.getEventDate() != null && !eventUpdateAdminDto.getEventDate().isBlank() ?
+                        TimeMapper.getDateTime(eventUpdateAdminDto.getEventDate()) : null)
+                .location(eventUpdateAdminDto.getLocationDto() != null ? LocationMapper.toLocation(eventUpdateAdminDto.getLocationDto()) : null)
                 .paid(eventUpdateAdminDto.getPaid())
                 .participantLimit(eventUpdateAdminDto.getParticipantLimit())
                 .requestModeration(eventUpdateAdminDto.getRequestModeration())
@@ -76,7 +79,9 @@ public class EventMapper {
         return Event.builder()
                 .annotation(eventUpdatePrivateDto.getAnnotation())
                 .description(eventUpdatePrivateDto.getDescription())
-                .location(LocationMapper.toLocation(eventUpdatePrivateDto.getLocation()))
+                .eventDate(eventUpdatePrivateDto.getEventDate() != null && !eventUpdatePrivateDto.getEventDate().isBlank() ?
+                        TimeMapper.getDateTime(eventUpdatePrivateDto.getEventDate()) : null)
+                .location(eventUpdatePrivateDto.getLocationDto() != null ? LocationMapper.toLocation(eventUpdatePrivateDto.getLocationDto()) : null)
                 .paid(eventUpdatePrivateDto.getPaid())
                 .participantLimit(eventUpdatePrivateDto.getParticipantLimit())
                 .requestModeration(eventUpdatePrivateDto.getRequestModeration())
@@ -84,16 +89,17 @@ public class EventMapper {
                 .build();
     }
 
-    public static Event toEventFromShort(EventShortDto eventShortDto) {
+    public static Event toEventFromNew(NewEventDto newEventDto) {
         return Event.builder()
-                .annotation(eventShortDto.getAnnotation())
-                .description(eventShortDto.getDescription())
-                .eventDate(TimeMapper.getDateTime(eventShortDto.getEventDate()))
-                .location(LocationMapper.toLocation(eventShortDto.getLocationDto()))
-                .paid(eventShortDto.getPaid())
-                .participantLimit(eventShortDto.getParticipantLimit())
-                .requestModeration(eventShortDto.getRequestModeration())
-                .title(eventShortDto.getTitle())
+                .annotation(newEventDto.getAnnotation())
+                .description(newEventDto.getDescription())
+                .eventDate(TimeMapper.getDateTime(newEventDto.getEventDate()))
+                .location(LocationMapper.toLocation(newEventDto.getLocation()))
+                .paid(newEventDto.getPaid())
+                .participantLimit(newEventDto.getParticipantLimit())
+                .requestModeration(newEventDto.getRequestModeration())
+                .title(newEventDto.getTitle())
+                .state(State.PENDING)
                 .build();
     }
 }

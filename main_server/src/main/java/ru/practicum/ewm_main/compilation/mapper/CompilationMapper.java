@@ -22,7 +22,9 @@ public class CompilationMapper {
 
     public static CompilationDto toCompilationDto(Compilation compilation) {
         return CompilationDto.builder()
-                .events(EventMapper.toListEventDto(compilation.getEvents()))
+                .id(compilation.getId())
+                .events(compilation.getEvents() != null && !compilation.getEvents().isEmpty() ?
+                        EventMapper.toListEventDto(compilation.getEvents()) : List.of())
                 .title(compilation.getTitle())
                 .pinned(compilation.getPinned())
                 .build();

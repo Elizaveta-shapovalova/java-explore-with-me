@@ -1,4 +1,4 @@
-package ru.practicum.ewm_main.event.dto;
+package ru.practicum.ewm_main.event.dto.location;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,7 +9,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LocationDto {
-    Long id;
     float lat;
     float lon;
 }

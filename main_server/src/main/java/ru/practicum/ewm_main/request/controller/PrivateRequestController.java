@@ -10,7 +10,6 @@ import ru.practicum.ewm_main.request.dto.RequestDto;
 import ru.practicum.ewm_main.request.mapper.RequestMapper;
 import ru.practicum.ewm_main.request.service.RequestService;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -28,7 +27,7 @@ public class PrivateRequestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public RequestDto create(@PathVariable Long userId, @NotNull @RequestParam Long eventId) {
+    public RequestDto create(@PathVariable Long userId, @RequestParam Long eventId) {
         return RequestMapper.toRequestDto(requestService.create(userId, eventId));
     }
 

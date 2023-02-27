@@ -1,6 +1,6 @@
 package ru.practicum.ewm_main.event.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.BooleanBuilder;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -49,30 +49,30 @@ public class EventServiceImpl implements EventService {
                                     LocalDateTime rangeEnd, Boolean onlyAvailable, SortType sort, Integer from, Integer size) {
 
         QEvent event = QEvent.event;
+        BooleanBuilder builder = new BooleanBuilder();
 
-        BooleanExpression query = event.state.eq(State.PUBLISHED);
-
+        builder.and(event.state.eq(State.PUBLISHED));
         if (text != null && !text.isBlank()) {
-            query.and(event.annotation.containsIgnoreCase(text)
+            builder.and(event.annotation.containsIgnoreCase(text)
                     .or(event.description.containsIgnoreCase(text)));
         }
         if (categories != null && !categories.isEmpty()) {
-            query.and(event.category.id.in(categories));
+            builder.and(event.category.id.in(categories));
         }
         if (paid != null) {
-            query.and(event.paid.eq(paid));
+            builder.and(event.paid.eq(paid));
         }
         if (rangeStart != null) {
-            query.and(event.eventDate.after(rangeStart));
+            builder.and(event.eventDate.after(rangeStart));
         }
         if (rangeEnd != null) {
-            query.and(event.eventDate.before(rangeEnd));
+            builder.and(event.eventDate.before(rangeEnd));
         }
         if (rangeStart == null && rangeEnd == null) {
-            query.and(event.eventDate.after(LocalDateTime.now()));
+            builder.and(event.eventDate.after(LocalDateTime.now()));
         }
         if (onlyAvailable) {
-            query.and(event.participantLimit.gt(event.confirmedRequests));
+            builder.and(event.participantLimit.gt(event.confirmedRequests));
         }
 
         Pageable pageable;
@@ -87,7 +87,7 @@ public class EventServiceImpl implements EventService {
             pageable = PageRequest.of(from / size, size, SORT_BY_ASC);
         }
 
-        return eventRepository.findAll(query, pageable).stream().collect(Collectors.toList());
+        return eventRepository.findAll(builder, pageable).stream().collect(Collectors.toList());
     }
 
     @Override
@@ -99,51 +99,54 @@ public class EventServiceImpl implements EventService {
     @Override
     public Page<Event> getAllAdmin(List<Long> users, List<State> states, List<Long> categories, LocalDateTime rangeStart,
                                    LocalDateTime rangeEnd, Integer from, Integer size) {
+
         Pageable pageable = PageRequest.of(from / size, size, SORT_BY_ASC);
         QEvent event = QEvent.event;
+        BooleanBuilder builder = new BooleanBuilder();
 
-
-        BooleanExpression query = event.isNotNull();
-
-        if (users != null && !users.isEmpty()) {
-            query.and(event.initiator.id.in(users));
-        }
-        if (states != null && !states.isEmpty()) {
-            query.and(event.state.in(states));
-        }
-        if (categories != null && !categories.isEmpty()) {
-            query.and(event.category.id.in(categories));
+        if (rangeStart == null && rangeEnd == null) {
+            builder.and(event.eventDate.after(LocalDateTime.now()));
         }
         if (rangeStart != null) {
-            query.and(event.eventDate.after(rangeStart));
+            builder.and(event.eventDate.after(rangeStart));
         }
         if (rangeEnd != null) {
-            query.and(event.eventDate.before(rangeStart));
+            builder.and(event.eventDate.before(rangeEnd));
         }
-        if (rangeStart == null && rangeEnd == null) {
-            query.and(event.eventDate.before(LocalDateTime.now()));
+        if (users != null && !users.isEmpty()) {
+            builder.and(event.initiator.id.in(users));
+        }
+        if (states != null && !states.isEmpty()) {
+            builder.and(event.state.in(states));
+        }
+        if (categories != null && !categories.isEmpty()) {
+            builder.and(event.category.id.in(categories));
         }
 
-        return eventRepository.findAll(query, pageable);
+        return eventRepository.findAll(builder, pageable);
     }
 
     @Transactional
     @Override
     public Event updateAdmin(Long eventId, Long categoryId, AdminStateAction stateAction, Event event) {
-        Event eventToUpdate = getByIdPublic(eventId);
+        Event eventToUpdate = checkEvent(eventId);
         if (!eventToUpdate.getState().equals(State.PENDING)) {
             throw new ValidationException(String.format("Cannot publish the event because it's not in the right state: %S",
                     eventToUpdate.getState()));
         }
-        if (stateAction.equals(AdminStateAction.PUBLISH_EVENT)) {
+        if (stateAction != null && stateAction.equals(AdminStateAction.PUBLISH_EVENT)) {
             if (eventToUpdate.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
                 throw new ValidationException(String.format("Cannot publish the event because it's not in the right time: %s",
                         eventToUpdate.getEventDate()));
             }
             eventToUpdate.setPublishedOn(LocalDateTime.now());
-            updateFields(categoryId, eventToUpdate, event, State.PUBLISHED);
+            eventToUpdate.setState(State.PUBLISHED);
+            updateFields(categoryId, eventToUpdate, event);
+        } else if (stateAction != null && stateAction.equals(AdminStateAction.REJECT_EVENT)) {
+            eventToUpdate.setState(State.CANCELED);
+            updateFields(categoryId, eventToUpdate, event);
         } else {
-            updateFields(categoryId, eventToUpdate, event, State.CANCELED);
+            updateFields(categoryId, eventToUpdate, event);
         }
         return eventToUpdate;
     }
@@ -158,6 +161,7 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public Event create(Long userId, Long category, Event event) {
+        checkEventTime(event.getEventDate());
         event.setInitiator(checkUser(userId));
         event.setCategory(checkCategory(category));
         event.setLocation(locationRepository.save(event.getLocation()));
@@ -167,7 +171,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public Event getByIdPrivate(Long userId, Long eventId) {
         checkUser(userId);
-        Event event = getByIdPublic(eventId);
+        Event event = checkEvent(eventId);
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ValidationException("Only initiator can get full information of event");
         }
@@ -177,18 +181,19 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public Event updatePrivate(Long userId, Long eventId, Long category, UserStateAction stateAction, Event event) {
-        checkUser(userId);
-        Event eventToUpdate = getByIdPublic(eventId);
+        Event eventToUpdate = getByIdPrivate(userId, eventId);
         if (!eventToUpdate.getInitiator().getId().equals(userId)) {
             throw new ValidationException("Only initiator can update event");
         }
         if (eventToUpdate.getState().equals(State.PUBLISHED)) {
             throw new ValidationException("Only pending or canceled events can be changed");
         }
-        if (stateAction.equals(UserStateAction.CANCEL_REVIEW)) {
-            updateFields(category, eventToUpdate, event, State.CANCELED);
+        if (stateAction != null && stateAction.equals(UserStateAction.CANCEL_REVIEW)) {
+            eventToUpdate.setState(State.CANCELED);
+            updateFields(category, eventToUpdate, event);
         } else {
-            updateFields(category, eventToUpdate, event, State.PENDING);
+            eventToUpdate.setState(State.PENDING);
+            updateFields(category, eventToUpdate, event);
         }
         return eventToUpdate;
     }
@@ -202,7 +207,7 @@ public class EventServiceImpl implements EventService {
         });
     }
 
-    private void updateFields(Long categoryId, Event eventToUpdate, Event event, State state) {
+    private void updateFields(Long categoryId, Event eventToUpdate, Event event) {
         if (categoryId != null) {
             Category categoryToUpdate = checkCategory(categoryId);
             eventToUpdate.setCategory(categoryToUpdate);
@@ -229,9 +234,9 @@ public class EventServiceImpl implements EventService {
             eventToUpdate.setTitle(event.getTitle());
         }
         if (event.getEventDate() != null) {
+            checkEventTime(event.getEventDate());
             eventToUpdate.setEventDate(event.getEventDate());
         }
-        eventToUpdate.setState(state);
     }
 
     private Category checkCategory(Long categoryId) {
@@ -242,5 +247,16 @@ public class EventServiceImpl implements EventService {
     private User checkUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ObjectNotFoundException(String.format("User with id=%d was not found", userId)));
+    }
+
+    private Event checkEvent(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new ObjectNotFoundException(String.format("Event with id=%d was not found", eventId)));
+    }
+
+    private void checkEventTime(LocalDateTime eventDate) {
+        if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ValidationException(String.format("EventDate cannot be earlier than two hours from the current moment. Value: %s", eventDate));
+        }
     }
 }

@@ -6,13 +6,15 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm_main.event.dto.EventDto;
-import ru.practicum.ewm_main.event.dto.EventFullDto;
+import ru.practicum.ewm_main.client.HitClient;
+import ru.practicum.ewm_main.event.dto.event.EventDto;
+import ru.practicum.ewm_main.event.dto.event.EventFullDto;
 import ru.practicum.ewm_main.event.enums.SortType;
 import ru.practicum.ewm_main.event.mapper.EventMapper;
 import ru.practicum.ewm_main.event.model.Event;
 import ru.practicum.ewm_main.event.service.EventService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
@@ -25,6 +27,7 @@ import java.util.List;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class PublicEventController {
     EventService eventService;
+    HitClient hitClient;
 
     @GetMapping
     public List<EventDto> getAllPublic(@RequestParam(required = false) String text,
@@ -35,20 +38,23 @@ public class PublicEventController {
                                        @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                        @RequestParam(required = false) String stringSort,
                                        @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
-                                       @Positive @RequestParam(defaultValue = "10") Integer size) {
+                                       @Positive @RequestParam(defaultValue = "10") Integer size,
+                                       HttpServletRequest httpServletRequest) {
         SortType sort = SortType.from(stringSort);
         List<Event> events = eventService.getAllPublic(text, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size);
         if (!events.isEmpty()) {
             eventService.addView(events);
         }
+        hitClient.createHit(httpServletRequest);
         return EventMapper.toListEventDto(events);
     }
 
-    @PatchMapping("/{eventId}")
-    public EventFullDto getByIdPublic(@PathVariable Long eventId) {
+    @GetMapping("/{eventId}")
+    public EventFullDto getByIdPublic(@PathVariable Long eventId, HttpServletRequest httpServletRequest) {
         Event event = eventService.getByIdPublic(eventId);
         eventService.addView(List.of(event));
+        hitClient.createHit(httpServletRequest);
         return EventMapper.toEventFullDto(event);
     }
 }
