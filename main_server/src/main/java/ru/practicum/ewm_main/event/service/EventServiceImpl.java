@@ -78,9 +78,6 @@ public class EventServiceImpl implements EventService {
         if (rangeStart == null && rangeEnd == null) {
             builder.and(event.eventDate.after(LocalDateTime.now()));
         }
-        if (onlyAvailable) {
-            builder.and(event.participantLimit.gt(event.confirmedRequests));
-        }
 
         Pageable pageable;
 
@@ -96,7 +93,12 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventRepository.findAll(builder, pageable).stream().collect(Collectors.toList());
         loadConfirmedRequests(events);
-        return events;
+
+        if (onlyAvailable) {
+            return events.stream().filter(e -> e.getParticipantLimit() > e.getConfirmedRequests()).collect(Collectors.toList());
+        } else {
+            return events;
+        }
     }
 
     @Override
