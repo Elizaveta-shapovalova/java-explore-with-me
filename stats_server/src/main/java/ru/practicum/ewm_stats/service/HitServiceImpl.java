@@ -26,8 +26,8 @@ public class HitServiceImpl implements HitService {
     @Transactional
     @Override
     public void create(Hit hit, App app) {
-            hit.setApp(Objects.requireNonNullElseGet(appRepository.findByName(app.getName()), () -> appRepository.save(app)));
-            hitRepository.save(hit);
+        hit.setApp(Objects.requireNonNullElseGet(appRepository.findByName(app.getName()), () -> appRepository.save(app)));
+        hitRepository.save(hit);
     }
 
     @Override

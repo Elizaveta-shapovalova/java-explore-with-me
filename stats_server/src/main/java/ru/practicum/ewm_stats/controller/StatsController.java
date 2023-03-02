@@ -26,7 +26,7 @@ public class StatsController {
         hitService.create(StatsMapper.toHit(endpointHit), StatsMapper.toApp(endpointHit.getApp()));
     }
 
-    @GetMapping("stats")
+    @GetMapping("/stats")
     public List<ViewStats> get(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
                                @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                @RequestParam(required = false) List<String> uris,
