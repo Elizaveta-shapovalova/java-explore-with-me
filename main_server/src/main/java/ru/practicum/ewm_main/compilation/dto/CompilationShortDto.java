@@ -15,7 +15,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CompilationShortDto {
     List<Long> events;
-    @NotNull
+    @NotNull(groups = {Create.class})
     @Builder.Default
     Boolean pinned = false;
     @NotBlank(groups = {Create.class}, message = "Field: title. Error: must not be blank. Value: null")

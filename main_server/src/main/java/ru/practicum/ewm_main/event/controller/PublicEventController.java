@@ -6,7 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm_main.client.HitClient;
+import ru.practicum.ewm_main.client.EventClient;
 import ru.practicum.ewm_main.event.dto.event.EventDto;
 import ru.practicum.ewm_main.event.dto.event.EventFullDto;
 import ru.practicum.ewm_main.event.enums.SortType;
@@ -27,7 +27,7 @@ import java.util.List;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class PublicEventController {
     EventService eventService;
-    HitClient hitClient;
+    EventClient eventClient;
 
     @GetMapping
     public List<EventDto> getAllPublic(@RequestParam(required = false) String text,
@@ -43,14 +43,14 @@ public class PublicEventController {
         SortType sort = SortType.from(stringSort);
         List<Event> events = eventService.getAllPublic(text, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size);
-        hitClient.createHit(httpServletRequest);
+        eventClient.createHit(httpServletRequest);
         return EventMapper.toListEventDto(events);
     }
 
     @GetMapping("/{eventId}")
     public EventFullDto getByIdPublic(@PathVariable Long eventId, HttpServletRequest httpServletRequest) {
         Event event = eventService.getByIdPublic(eventId);
-        hitClient.createHit(httpServletRequest);
+        eventClient.createHit(httpServletRequest);
         return EventMapper.toEventFullDto(event);
     }
 }

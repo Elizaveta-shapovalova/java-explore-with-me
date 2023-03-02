@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm_main.category.model.Category;
 import ru.practicum.ewm_main.category.repository.CategoryRepository;
+import ru.practicum.ewm_main.client.EventClient;
+import ru.practicum.ewm_main.client.ViewStats;
 import ru.practicum.ewm_main.event.enums.AdminStateAction;
 import ru.practicum.ewm_main.event.enums.SortType;
 import ru.practicum.ewm_main.event.enums.State;
@@ -28,13 +30,14 @@ import ru.practicum.ewm_main.user.model.User;
 import ru.practicum.ewm_main.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toSet;
 import static ru.practicum.ewm_main.constant.Constant.SORT_BY_ASC;
 
 
@@ -47,9 +50,10 @@ public class EventServiceImpl implements EventService {
     CategoryRepository categoryRepository;
     UserRepository userRepository;
     LocationRepository locationRepository;
+    RequestRepository requestRepository;
     static Sort SORT_BY_VIEWS = Sort.by(Sort.Direction.DESC, "views");
     static Sort SORT_BY_EVENT_DATE = Sort.by(Sort.Direction.ASC, "eventDate");
-    private final RequestRepository requestRepository;
+    EventClient eventClient;
 
     @Override
     public List<Event> getAllPublic(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
@@ -93,12 +97,12 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventRepository.findAll(builder, pageable).stream().collect(Collectors.toList());
         loadConfirmedRequests(events);
-
         if (onlyAvailable) {
-            return events.stream().filter(e -> e.getParticipantLimit() > e.getConfirmedRequests()).collect(Collectors.toList());
-        } else {
-            return events;
+            events = events.stream()
+                    .filter(e -> e.getParticipantLimit() > e.getConfirmedRequests()).collect(Collectors.toList());
         }
+        loadViews(events);
+        return events.stream().sorted(Comparator.comparingLong(Event::getViews).reversed()).collect(Collectors.toList());
     }
 
     @Override
@@ -106,6 +110,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findByIdAndStateEquals(eventId, State.PUBLISHED)
                 .orElseThrow(() -> new ObjectNotFoundException(String.format("Event with id=%d was not found", eventId)));
         loadConfirmedRequests(List.of(event));
+        loadViews(List.of(event));
         return event;
     }
 
@@ -137,7 +142,8 @@ public class EventServiceImpl implements EventService {
         }
         List<Event> events = eventRepository.findAll(builder, pageable).stream().collect(Collectors.toList());
         loadConfirmedRequests(events);
-        return events;
+        loadViews(events);
+        return events.stream().sorted(Comparator.comparingLong(Event::getViews).reversed()).collect(Collectors.toList());
     }
 
     @Transactional
@@ -171,7 +177,8 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findAllByInitiatorId(userId, PageRequest.of(from / size, size, SORT_BY_ASC))
                 .stream().collect(Collectors.toList());
         loadConfirmedRequests(events);
-        return events;
+        loadViews(events);
+        return events.stream().sorted(Comparator.comparingLong(Event::getViews).reversed()).collect(Collectors.toList());
     }
 
     @Transactional
@@ -188,17 +195,18 @@ public class EventServiceImpl implements EventService {
     public Event getByIdPrivate(Long userId, Long eventId) {
         checkUser(userId);
         Event event = checkEvent(eventId);
-        if (!event.getInitiator().getId().equals(userId)) {
-            throw new ValidationException("Only initiator can get full information or update event");
-        }
+        checkPrivate(userId, event.getInitiator().getId());
         loadConfirmedRequests(List.of(event));
+        loadViews(List.of(event));
         return event;
     }
 
     @Transactional
     @Override
     public Event updatePrivate(Long userId, Long eventId, Long category, UserStateAction stateAction, Event event) {
-        Event eventToUpdate = getByIdPrivate(userId, eventId);
+        checkUser(userId);
+        Event eventToUpdate = checkEvent(eventId);
+        checkPrivate(userId, eventToUpdate.getInitiator().getId());
         if (eventToUpdate.getState().equals(State.PUBLISHED)) {
             throw new ValidationException("Only pending or canceled events can be changed");
         }
@@ -244,12 +252,23 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void loadConfirmedRequests(List<Event> events) {
-        Map<Event, Set<Request>> requests = requestRepository.findAllByEventInAndStatusEquals(events, Status.CONFIRMED)
-                .stream()
-                .collect(groupingBy(Request::getEvent, toSet()));
+    private void loadViews(List<Event> events) {
+        Set<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toSet());
 
-        events.forEach(event -> event.setConfirmedRequests((long) requests.values().size()));
+        Map<Long, Long> views = eventClient.getViews(eventIds).stream()  //eventId - hits
+                .collect(Collectors.toMap(v -> Long.parseLong(v.getUri().substring(8)), ViewStats::getHits));
+
+        events.forEach(event -> event.setViews(views.getOrDefault(event.getId(), 0L)));
+    }
+
+    private void loadConfirmedRequests(List<Event> events) {
+        Map<Event, Long> requests = requestRepository.findAllByEventInAndStatusEquals(events, Status.CONFIRMED)
+                .stream()
+                .collect(groupingBy(Request::getEvent, counting()));
+
+        events.forEach(event -> event.setConfirmedRequests(requests.get(event)));
     }
 
     private Category checkCategory(Long categoryId) {
@@ -270,6 +289,12 @@ public class EventServiceImpl implements EventService {
     private void checkEventTime(LocalDateTime eventDate) {
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
             throw new ValidationException(String.format("EventDate cannot be earlier than two hours from the current moment. Value: %s", eventDate));
+        }
+    }
+
+    private void checkPrivate(Long userId, Long initiatorId) {
+        if (!initiatorId.equals(userId)) {
+            throw new ValidationException("Only initiator can get full information or update event");
         }
     }
 }

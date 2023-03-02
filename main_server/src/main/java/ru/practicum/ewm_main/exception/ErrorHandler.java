@@ -63,18 +63,6 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiError handleTimeNotValidException(final TimeNotValidException e) {
-        log.error(e.getLocalizedMessage(), e.getMessage());
-        return ApiError.builder()
-                .status(HttpStatus.FORBIDDEN)
-                .reason("For the requested operation the conditions are not met.")
-                .message(e.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
-    @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleValidationException(final ValidationException e) {
         log.error("{}{}", e.getLocalizedMessage(), e.getMessage());
