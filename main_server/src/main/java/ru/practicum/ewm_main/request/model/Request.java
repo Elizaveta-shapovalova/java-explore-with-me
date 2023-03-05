@@ -34,4 +34,7 @@ public class Request {
     @Enumerated(EnumType.STRING)
     @Column(length = 16)
     Status status;
+    @Builder.Default
+    @Column(name = "is_paid", nullable = false)
+    Boolean isPaid = false; //оплачен ли
 }

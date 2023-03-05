@@ -46,6 +46,8 @@ public class Event {
     Location location;
     @Column(nullable = false)
     Boolean paid;
+    @Column(nullable = false)
+    Double price; // цена мероприятия
     @Column(name = "participant_limit", nullable = false)
     Long participantLimit;
     @Column(name = "published_on")

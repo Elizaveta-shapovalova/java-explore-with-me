@@ -32,4 +32,6 @@ public class EventUpdateAdminDto {
     AdminStateAction stateAction;
     @Size(min = 3, max = 120, groups = {Update.class})
     String title;
+    @PositiveOrZero(groups = {Update.class})
+    Double price;
 }

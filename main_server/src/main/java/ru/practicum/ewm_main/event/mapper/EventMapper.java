@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static ru.practicum.ewm_main.constant.Constant.DATE_TIME_FORMATTER;
-
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EventMapper {
 
@@ -22,12 +20,13 @@ public class EventMapper {
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.toCategoryDto(event.getCategory()))
                 .confirmedRequests(event.getConfirmedRequests() != null ? event.getConfirmedRequests() : null)
-                .eventDate(event.getEventDate().format(DATE_TIME_FORMATTER))
+                .eventDate(event.getEventDate())
                 .id(event.getId())
                 .initiator(UserMapper.toUserShotDto(event.getInitiator()))
                 .paid(event.getPaid())
                 .title(event.getTitle())
                 .views(event.getViews())
+                .price(event.getPrice())
                 .build();
     }
 
@@ -57,6 +56,7 @@ public class EventMapper {
                 .state(event.getState())
                 .title(event.getTitle())
                 .views(event.getViews())
+                .price(event.getPrice())
                 .build();
     }
 
@@ -74,6 +74,7 @@ public class EventMapper {
                 .participantLimit(eventUpdateAdminDto.getParticipantLimit())
                 .requestModeration(eventUpdateAdminDto.getRequestModeration())
                 .title(eventUpdateAdminDto.getTitle())
+                .price(eventUpdateAdminDto.getPrice())
                 .build();
     }
 
@@ -87,6 +88,7 @@ public class EventMapper {
                 .participantLimit(eventUpdatePrivateDto.getParticipantLimit())
                 .requestModeration(eventUpdatePrivateDto.getRequestModeration())
                 .title(eventUpdatePrivateDto.getTitle())
+                .price(eventUpdatePrivateDto.getPrice())
                 .build();
     }
 
@@ -101,6 +103,7 @@ public class EventMapper {
                 .requestModeration(newEventDto.isRequestModeration())
                 .title(newEventDto.getTitle())
                 .state(State.PENDING)
+                .price(newEventDto.getPrice())
                 .build();
     }
 }

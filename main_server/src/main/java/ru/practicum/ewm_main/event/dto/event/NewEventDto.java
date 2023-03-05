@@ -40,4 +40,6 @@ public class NewEventDto {
     @Size(min = 3, max = 120, groups = {Create.class})
     String title;
     UserStateAction stateAction;
+    @PositiveOrZero(groups = {Create.class})
+    double price = 0;
 }
