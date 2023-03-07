@@ -21,6 +21,7 @@ public class RequestMapper {
                 .id(request.getId())
                 .requester(request.getRequester().getId())
                 .status(request.getStatus())
+                .isPaid(request.getIsPaid())
                 .build();
     }
 

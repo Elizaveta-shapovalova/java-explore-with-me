@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm_main.category.model.Category;
 import ru.practicum.ewm_main.category.repository.CategoryRepository;
 import ru.practicum.ewm_main.client.EventClient;
-import ru.practicum.ewm_main.client.ViewStats;
+import ru.practicum.ewm_main.client.dto.ViewStats;
 import ru.practicum.ewm_main.event.enums.AdminStateAction;
 import ru.practicum.ewm_main.event.enums.SortType;
 import ru.practicum.ewm_main.event.enums.State;
@@ -188,6 +188,7 @@ public class EventServiceImpl implements EventService {
         event.setInitiator(checkUser(userId));
         event.setCategory(checkCategory(category));
         event.setLocation(locationRepository.save(event.getLocation()));
+        checkPrice(event.getPrice(), event.getPaid());
         return eventRepository.save(event);
     }
 
@@ -250,6 +251,10 @@ public class EventServiceImpl implements EventService {
             checkEventTime(event.getEventDate());
             eventToUpdate.setEventDate(event.getEventDate());
         }
+        if (event.getPrice() != null) {
+            checkPrice(event.getPrice(), eventToUpdate.getPaid());
+            eventToUpdate.setPrice(event.getPrice());
+        }
     }
 
     private void loadViews(List<Event> events) {
@@ -257,7 +262,7 @@ public class EventServiceImpl implements EventService {
                 .map(Event::getId)
                 .collect(Collectors.toSet());
 
-        Map<Long, Long> views = eventClient.getViews(eventIds).stream()  //eventId - hits
+        Map<Long, Long> views = eventClient.getViews(eventIds).stream()
                 .collect(Collectors.toMap(v -> Long.parseLong(v.getUri().substring(8)), ViewStats::getHits));
 
         events.forEach(event -> event.setViews(views.getOrDefault(event.getId(), 0L)));
@@ -284,6 +289,12 @@ public class EventServiceImpl implements EventService {
     private Event checkEvent(Long eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException(String.format("Event with id=%d was not found", eventId)));
+    }
+
+    private void checkPrice(Double price, Boolean paid) {
+        if (price != 0 && !paid.equals(true)) {
+            throw new ValidationException("Paid event must have a flag - true");
+        }
     }
 
     private void checkEventTime(LocalDateTime eventDate) {

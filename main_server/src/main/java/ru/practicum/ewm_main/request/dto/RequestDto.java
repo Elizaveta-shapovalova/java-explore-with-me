@@ -15,4 +15,5 @@ public class RequestDto {
     Long id;
     Long requester;
     Status status;
+    Boolean isPaid;
 }
