@@ -7,7 +7,17 @@ The application is divided into three types of access: administrator, user, publ
 
 As for the technical part, the application is based on a microservice architecture, where the main part, statistics part and database are different services that have their own clients to communicate with each other and connect using Docker.
 
+
+<details>
+  <summary>
+    <h2>Schema</h2>
+  </summary>
+  <p>
+
 ![Image alt](https://github.com/Elizaveta-Shapovalova/java-explore-with-me/raw/main/scheme-MA.png)
+
+  </p>
+</details>
 
 ---
 
