@@ -47,7 +47,7 @@ public class PaymentClient {
                 .build();
     }
 
-    //Данная можель используется при реальном взаимодействии с Paypal sandbox
+    //This code id used with manual testing on Paypal Sandbox
 
     /*@SneakyThrows
     public Order confirm(String token) {
