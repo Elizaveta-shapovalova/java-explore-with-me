@@ -20,6 +20,7 @@ As for the technical part, the application is based on a microservice architectu
  - For testing app was used: autotests on JS in [Postman](https://github.com/Elizaveta-shapovalova/java-explore-with-me/blob/main/postman/feature.json) for the feature, JUnit, [Mockito](https://github.com/Elizaveta-shapovalova/java-explore-with-me/blob/main/stats_server/src/test/java/ru/practicum/ewm_stats/service/HitServiceImplTest.java) and [Jackson](https://github.com/Elizaveta-shapovalova/java-explore-with-me/blob/main/stats_server/src/test/java/ru/practicum/ewm_stats/dto/EndpointHitTest.java).
  - Also, n-request to the database and to other modules were excluded.
  - Payment system integration [PayPal](https://github.com/Elizaveta-shapovalova/java-explore-with-me/blob/main/main_server/src/main/java/ru/practicum/ewm_main/paypal/client/PaymentClient.java).
+ - Dependencies were connected using Maven.
 
 ---
 
