@@ -5,7 +5,7 @@ The application allows users to share interesting events, view them, and leave r
 
 The application is divided into three types of access: administrator, user, public. Verification takes place at all stages of the application.
 
-As for the technical part, the application is a microservice architecture, where the main blog, statistics blog and database are different services that have their own clients to communicate with each other and connect using Docker.
+As for the technical part, the application is based on a microservice architecture, where the main part, statistics part and database are different services that have their own clients to communicate with each other and connect using Docker.
 
 ![Image alt](https://github.com/Elizaveta-Shapovalova/java-explore-with-me/raw/main/scheme-MA.png)
 
